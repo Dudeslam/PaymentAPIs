@@ -1,0 +1,101 @@
+﻿@model PoCNetsEasy.Models.Products
+
+@{
+    ViewBag.Title = "Shop";
+}
+
+@*<script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+        "axois" : "https://unpkg.com/browse/axios@0.2.1/dist/"
+      }
+    }
+</script>*@
+
+<script src="https://unpkg.com/vue@3"></script>
+
+
+<div class="p-3 p-xxl-5">
+    <div class="row p-2 justify-content-between">
+        <div class="col-12 col-sm-8 ps-0">
+            <h2>@ViewBag.Title</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <div class="row">
+
+                    <h3>You Basket</h3>
+                    <div v-for="product in basket"></div>
+
+                    <div>
+                        <button v-on:click="goToCheckout()" class="ProdBtn">Go To Checkout</button>
+                    </div>
+                </div>
+                <div id="Basket" class="col-6">
+                    <table class="primary-table">
+                        <thead class="vertical-gradient">
+                            <h3>Products for sell</h3>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <button v-on:click="addToBasket(@item)" class="ProdBtn">@item.Name</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { createApp } from 'vue';
+
+    createApp({
+        data() {
+            return {
+                basket: [
+                    { product = null }
+                ],
+                product: {
+                    name: "",
+                    id: 0,
+                    descript: "",
+                    price: 1,
+                    category: ""
+                }
+            }
+        },
+        methods: {
+
+            addToBasket: function (product) {
+                this.basket.push(BasketItem);
+            }
+            goToCheckout: function () {
+                var request = new XMLHttpRequest();
+                request.open('GET', 'create-payment', true);
+                request.onload = function () {
+                    const data = JSON.parse(this.response);        // If parse error, check output 
+                    if (!data.paymentId) {                         // from create-payment.php
+                        console.error('Error: Check output from create-payment');
+                        return;
+                    }
+                    console.log(this.response);
+
+                    // checkout.html is implemented in Step 3
+                    window.location = 'checkout.html?paymentId=' + data.paymentId;
+                }
+                request.onerror = function () { console.error('connection error'); }
+                request.send();
+            }
+          
+        }
+    }).mount('#basket')
+</script>

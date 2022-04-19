@@ -1,0 +1,57 @@
+﻿<!-- The following example is written using C#.Net Razor syntax -->
+@model PoCNetsEasy.Models.RandomString
+@{
+    string accessToken = "BqFenjra8ft3s7WBXGEn";
+    string merchantNumber = "T500173001";
+    string secretToken = "PsdwtVqUEw6wzaiFiqovqCVQXT3aybzwteatntJr";
+    string unencodedApiKey = string.Concat(accessToken, "@", merchantNumber, ":", secretToken);
+    byte[] unencodedApiKeyAsBytes = System.Text.Encoding.UTF8.GetBytes(unencodedApiKey);
+    string apiKey = "Basic " + System.Convert.ToBase64String(unencodedApiKeyAsBytes);
+    string endpoint = "https://api.v1.checkout.bambora.com/sessions";
+    string randomID =  Model.ThisString;
+    dynamic checkoutRequest = new
+    {
+        order = new
+        {
+            id = randomID,
+            amount = "22225",
+            currency = "DKK"
+        },
+        url = new
+        {
+            accept = "https://localhost:44337/API/Accept",
+            cancel = "https://localhost:44337/API/Cancel",
+            callbacks = new List<dynamic>{ new { url = "https://example.org/callback"} }
+        }
+    };
+    System.Net.WebClient client = new System.Net.WebClient();
+    client.Headers.Add(System.Net.HttpRequestHeader.ContentType, "application/json");
+    client.Headers.Add(System.Net.HttpRequestHeader.Authorization, apiKey);
+    client.Headers.Add(System.Net.HttpRequestHeader.Accept, "application/json");
+
+    var checkoutRequestJson = System.Web.Helpers.Json.Encode(checkoutRequest);
+    var checkoutResponseJson = client.UploadString(endpoint, "POST", checkoutRequestJson);
+    dynamic checkoutResponse = System.Web.Helpers.Json.Decode(checkoutResponseJson);
+    }
+
+    <!doctype html>
+    <html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Bambora Online Checkout C#.Net Razor example</title>
+    </head>
+    <body>
+        @{ if (checkoutResponse.meta.result)
+    {
+        <script src="https://static.bambora.com/checkout-sdk-web/latest/checkout-sdk-web.min.js"></script>
+        <script>
+          new Bambora.RedirectCheckout("@checkoutResponse.token");
+        </script>
+    }
+    else
+    {
+        <p>Error: @checkoutResponse.meta.message.enduser </p>
+    }
+        }
+    </body>
+</html>
