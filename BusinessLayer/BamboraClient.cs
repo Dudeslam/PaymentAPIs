@@ -26,9 +26,12 @@ namespace PoCNetsEasy.BusinessLayer
             client.AddDefaultHeader("Content-Type", "application/json");
         }
 
-        public IRestResponse CreateSession(order or)
+        public dynamic CreateSession(order or)
         {
-            var request = new RestRequest("payments", Method.POST);
+            string unencodedApiKey = string.Concat(accessToken, "@", merchantNumber, ":", secretToken);
+            byte[] unencodedApiKeyAsBytes = System.Text.Encoding.UTF8.GetBytes(unencodedApiKey);
+            string apiKey = "Basic " + System.Convert.ToBase64String(unencodedApiKeyAsBytes);
+            string endpoint = "https://api.v1.checkout.bambora.com/sessions";
             dynamic checkoutRequest = new
             {
                 order = new
@@ -40,13 +43,20 @@ namespace PoCNetsEasy.BusinessLayer
                 url = new
                 {
                     accept = acceptURL,
-                    cancel = cancelURL
+                    cancel = cancelURL,
+                    callbacks = new List<dynamic> { new { url = "https://example.org/callback" } }
 
                 }
             };
-            request.AddParameter("application/*+json", JsonSerializer.Serialize(), ParameterType.RequestBody);
-            var response = client.Execute(request);
-            return response;
+            System.Net.WebClient client = new System.Net.WebClient();
+            client.Headers.Add(System.Net.HttpRequestHeader.ContentType, "application/json");
+            client.Headers.Add(System.Net.HttpRequestHeader.Authorization, apiKey);
+            client.Headers.Add(System.Net.HttpRequestHeader.Accept, "application/json");
+
+            var checkoutRequestJson = System.Web.Helpers.Json.Encode(checkoutRequest);
+            var checkoutResponseJson = client.UploadString(endpoint, "POST", checkoutRequestJson);
+            dynamic checkoutResponse = System.Web.Helpers.Json.Decode(checkoutResponseJson);
+            return checkoutResponse;
         }
 
     }

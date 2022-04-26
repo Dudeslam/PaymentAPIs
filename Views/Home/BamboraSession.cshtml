@@ -1,1 +1,20 @@
-﻿
+﻿@model PoCNetsEasy.Models.BamboraResponse
+
+<head>
+    <meta charset="utf-8" />
+    <title>Bambora API example using MVC</title>
+</head>
+<body>
+    @{ if (Model.meta.result)
+        {
+            <script src=""https://static.bambora.com/checkout-sdk-web/latest/checkout-sdk-web.min.js"></script>
+            <script>
+          new Bambora.RedirectCheckout("@Model.token");
+            </script>
+        }
+        else
+        {
+            <p>Error: @Model.meta.message.enduser </p>
+        }
+    }
+</body>

@@ -3,10 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 using System.Web.Mvc;
 using NetsEasyPOC.BusinessLayer;
 using PoCNetsEasy.Models;
 using PoCNetsEasy.BusinessLayer;
+using System.Reflection;
 
 namespace NetsEasyPOC.Controllers
 {
@@ -14,7 +16,8 @@ namespace NetsEasyPOC.Controllers
     {
 
         
-        NetsClient client = new NetsClient();
+        NetsClient NetsClient = new NetsClient();
+        BamboraClient BamboraClient = new BamboraClient();
         public ActionResult Index()
         {            //add random products to model
             return View();
@@ -35,9 +38,46 @@ namespace NetsEasyPOC.Controllers
 
         public ActionResult BamboraSession()
         {
-            return View();
-        }
+            var Model = new BamboraResponse();
+            Meta meta = new Meta();
+            PoCNetsEasy.Models.Action act = new PoCNetsEasy.Models.Action();
+            Message msg = new Message();
+            var order = new order();
 
+            
+            order.id = RandomData.GetRandomString(10);
+            order.currency = "DKK";
+            order.amount = "100";
+            var Respons = BamboraClient.CreateSession(order);
+
+            //Dynamic Method
+            //foreach (var item in Respons.meta)
+            //{
+            //    foreach (var MetaItem in Model.meta.GetType().GetProperties())
+            //    {
+            //        if (item.Key == MetaItem.Name)
+            //        {
+            //            MetaItem.SetValue(Model.meta, item.Value);
+            //            //meta.Add(item.Key, item.Value);
+            //            //Model.meta.
+            //        }
+            //    }
+            //}
+
+            //Static Method
+            Model.meta.result = Respons.meta.result;
+            Model.meta.message.merchant = Respons.meta.message.merchant;
+            Model.meta.message.enduser = Respons.meta.message.enduser;
+            Model.meta.action.code = Respons.meta.action.code;
+            Model.meta.action.source = Respons.meta.action.source;
+            Model.meta.action.type = Respons.meta.action.type;
+
+            Model.token = Respons.token;
+            Model.url = Respons.url;
+
+            return View(Model);
+        }
+        
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";
@@ -66,7 +106,7 @@ namespace NetsEasyPOC.Controllers
             TestOrder.items.Add(singleitem);
             TestOrder.items.Add(singleitem);
             rootBody.order = TestOrder;
-            var model = client.CreatePayment(rootBody);
+            var model = NetsClient.CreatePayment(rootBody);
             
             return View(model);
         }
@@ -98,5 +138,6 @@ namespace NetsEasyPOC.Controllers
             thisString.ThisString = randomID;
             return View(thisString);
         }
+
     }
 }
